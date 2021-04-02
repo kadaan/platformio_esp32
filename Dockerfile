@@ -6,6 +6,7 @@ ENV PLATFORMIO_CORE_DIR=/.platformio
 RUN mkdir /app
 WORKDIR /app
 
+COPY dummy-native /opt/dummy-native
 COPY dummy-esp32 /opt/dummy-esp32
 COPY dummy-esp32-idf /opt/dummy-esp32-idf
 
@@ -36,6 +37,9 @@ RUN python3 -m pip install --upgrade pip setuptools
 RUN python3 -m pip install platformio
 
 RUN python3 -V
+
+# ESP32 Arduino Frameworks for Platformio
+RUN pio platform install native
 
 # ESP32 Arduino Frameworks for Platformio
 RUN pio platform install espressif32 && \
@@ -71,10 +75,17 @@ WORKDIR /opt/dummy-esp32
 RUN pio --version && pio run && pio check
 RUN rm -rf /.platformio/packages/framework-arduinoespressif32/.gitmodules
 
+WORKDIR /opt/dummy-native
+RUN pio --version && pio run && pio check && pio test
+
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN mkdir /src && \
     chmod -R 777 /.platformio && \
     chmod -R 777 /esp
+
+COPY platformio.sh /platformio.sh
+RUN chmod 777 /platformio.sh
+
 WORKDIR /src
-ENTRYPOINT ["platformio"]
+ENTRYPOINT ["/platformio.sh"]
